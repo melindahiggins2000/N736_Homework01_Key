@@ -1,0 +1,140 @@
+---
+title: "Homework 01 - getting started"
+author: "Melinda K. Higgins, PhD."
+date: "August 30, 2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This document provides some suggested code and examples to get started on your homework 01.
+
+## Get the data
+
+The following code uses the `tidyverse` packages and workflow. As such these examples load (using the `library()` command) these packages:
+
+* `tidyverse`
+* `readxl`
+* `forcats`
+
+```{r}
+# load tidyverse and readxl packages
+library(tidyverse)
+library(readxl)
+
+# used read_excel() from the readxl package
+dat <- read_excel("Dataset_02_fixq2.xlsx")
+```
+
+## do a basic summary
+
+```{r}
+# the summary() function gives you some basic summary stats
+summary(dat)
+```
+
+## get some plots
+
+Using the `tidyverse` workflow, the following code uses "pipes" which is the `%>%` symbol to take the output from one line as the input to the next line. So the code below can be read as "take the dataset called `dat` and send it (pipe it) into the `ggplot()` graphics environment and then add `+` a `geom` layer for a histogram using the `geom_histogram()` function." To learn more about `tidyverse`, see [https://www.tidyverse.org/](https://www.tidyverse.org/). The "R Graphics Cookbook" is another fantastic resource for learning how to use `ggplot()` - see [http://www.cookbook-r.com/Graphs/](http://www.cookbook-r.com/Graphs/). There is a lot of great info and examples online, but you can also purchase the book on Amazon.
+
+### Histogram of Age
+
+```{r}
+dat %>%
+  ggplot() + 
+  geom_histogram(mapping = aes(x = Age), 
+                 binwidth = 10)
+```
+
+### Bar chart of SES
+
+This plot uses the `geom_bar()` graphics layer. However, you'll notice that the categories still show the numeric codes. We could add labels manually, but it gets tedious to do this everytime.
+
+```{r}
+dat %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = SES))
+
+# you can add an x-axis title and labels for the categories
+dat %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = SES)) +
+  scale_x_continuous(name = "Socio Economic Status",
+                   breaks = c(1,2,3),
+                   labels = c("Low Income","Average Income",
+                              "High Income"))
+```
+
+## add some factor level info - categorical and ordinal data
+
+We can add the labels for the categorical and ordinal data by changes these variables into "factors". In the `tidyverse` world, the package for this is `forcats`.
+
+```{r}
+# load the forcats package
+library(forcats)
+
+# create objects for the labels and levels for SES
+sesLabels <- c("Low Income","Average Income", "High Income")
+sesLevels <- c(1,2,3)
+
+# apply the labels and levels for SES using the factor() function
+dat$SES <- factor(dat$SES, 
+                  levels = sesLevels, 
+                  labels = sesLabels)
+```
+
+Now that we've create a factor type variable for SES, we can redo our bar chart but now the labels are automatically applied. We do not have to type them in separately using the `scale_x_continuous()` function in the `ggplot2` package.
+
+```{r}
+# redo bar plot
+dat %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = SES))
+
+# another way to do the bar plot
+dat %>%
+  ggplot(aes(SES)) +
+  geom_bar()
+```
+
+## adding labels for the 5 LiKert scale questions q1,q2,q3,q4,q5
+
+Using a similar workflow to what we did above for SES, let's do it again for q1.
+
+```{r}
+# Likert scale coding for q1-q5
+qLevels <- c(1,2,3,4,5) 
+qLabels <- c("None of the time","a little of the time","some of the time",
+             "a lot of the time","all of the time") 
+
+# apply to q1 - you can redo this for the remaining 4 questions
+dat$q1 <- factor(dat$q1, 
+                 levels = qLevels, 
+                 labels = qLabels)
+```
+
+In addition to providing labels in plotting routines, the factor coding also helps with the summary stats.
+
+```{r}
+summary(dat$q1)
+```
+
+And here is a plot of the q1 responses - notice that there are some missing values, `NA`s. There is a second plot made where these are removed using the `is.na()` function and the actual code uses `!is.na()` which says find the data that are NOT (`!`) missing.
+
+```{r}
+dat %>%
+  ggplot(aes(q1)) +
+  geom_bar()
+
+# remove NAs and replot
+dat %>%
+  subset(!is.na(q1)) %>%
+  ggplot(aes(q1)) +
+  geom_bar()
+
+```
+
